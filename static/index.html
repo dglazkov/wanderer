@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<title>Wanderer</title>
+<script type="module">
+
+  const params = new URL(window.location).searchParams;
+  const mode = params.get('mode')
+
+  let form = new FormData();
+  if (mode == 'describe') {
+    const concept = params.get('concept');
+    form.append('concept', concept);
+    const result = await call_api('describe', form);
+    render_describe(result, concept);
+  } else if (mode == 'list') {
+    const concept = params.get('concept');
+    form.append('concept', concept);
+    const result = await call_api('list', form);
+    render_list(result, concept);
+  } else {
+    const result = await call_api('start', form);
+    render_list(result);
+  }
+
+  async function call_api(api, form) {
+    const result = await (await fetch(`/api/${api}`, {
+      method: 'POST',
+      body: form
+    })).json();
+    return result;
+  }
+
+
+  function render_describe(result, concept) {
+    if (!result || result.error || !result.text) {
+      console.log(`error in render_describe. Result is wrong: ${JSON.stringify(result)}`);
+      return;
+    }
+
+    const div = document.createElement('div');
+    div.textContent = result.text;
+    document.body.appendChild(div);
+
+    const more = document.createElement('div');
+    const url = new URL(window.location);
+    url.searchParams.set('mode', 'list');
+    url.searchParams.set('concept', concept);
+    more.innerHTML = `<a href="${url}">Related concepts</a>`;
+    document.body.appendChild(more);
+  }
+
+  function render_list(result, concept) {
+    if (!result || result.error || !result.list) {
+      console.log(`error in render_start. Result is wrong: ${JSON.stringify(result)}`);
+      return;
+    }
+
+    if (concept) {
+      const h2 = document.createElement('h2');
+      h2.textContent = `Related concepts for ${concept}`;
+      document.body.appendChild(h2);
+    }
+
+    result.list.forEach((item) => {
+      const li = document.createElement('li');
+      const url = new URL(window.location);
+      url.searchParams.set('mode', 'describe');
+      url.searchParams.set('concept', item);
+      li.innerHTML = `<a href="${url}">${item}</a>`;
+      document.body.appendChild(li);
+    });
+  }
+
+
+</script>
