@@ -25,7 +25,9 @@ def sanitize(line):
 
 
 def make_list(response):
-    lines = random.sample(response.splitlines(), MAX_ITEMS_PER_LIST)
+    lines = response.splitlines()
+    if len(lines) > MAX_ITEMS_PER_LIST:
+        lines = random.sample(lines, MAX_ITEMS_PER_LIST)
     return [sanitize(line) for line in lines]
     
 @app.route("/api/start", methods=["POST"])
