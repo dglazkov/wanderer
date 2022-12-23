@@ -1,74 +1,116 @@
 <!DOCTYPE html>
 <title>Wanderer</title>
-<script type="module">
 
-  const params = new URL(window.location).searchParams;
-  const mode = params.get('mode')
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
 
-  let form = new FormData();
-  if (mode == 'describe') {
-    const concept = params.get('concept');
-    form.append('concept', concept);
-    const result = await call_api('describe', form);
-    render_describe(result, concept);
-  } else if (mode == 'list') {
-    const concept = params.get('concept');
-    form.append('concept', concept);
-    const result = await call_api('list', form);
-    render_list(result, concept);
-  } else {
-    const result = await call_api('start', form);
-    render_list(result);
-  }
+<body>
+  <div id="spinner">✨</div>
+  <script type="module">
 
-  async function call_api(api, form) {
-    const result = await (await fetch(`/api/${api}`, {
-      method: 'POST',
-      body: form
-    })).json();
-    return result;
-  }
+    const VALID_API_CALLS = ['describe', 'list'];
 
+    await main();
 
-  function render_describe(result, concept) {
-    if (!result || result.error || !result.text) {
-      console.log(`error in render_describe. Result is wrong: ${JSON.stringify(result)}`);
-      return;
+    async function main() {
+      const params = new URL(window.location).searchParams;
+      let concept = params.get('concept');
+      let mode = params.get('mode');
+
+      if (!VALID_API_CALLS.includes(mode)) {
+        mode = 'start';
+        concept = null;
+      }
+
+      let form = new FormData();
+      if (concept)
+        form.append('concept', concept);
+
+      const result = await call_api(mode, form);
+      render_result(result, concept);
     }
 
-    const div = document.createElement('div');
-    div.textContent = result.text;
-    document.body.appendChild(div);
-
-    const more = document.createElement('div');
-    const url = new URL(window.location);
-    url.searchParams.set('mode', 'list');
-    url.searchParams.set('concept', concept);
-    more.innerHTML = `<a href="${url}">Related concepts</a>`;
-    document.body.appendChild(more);
-  }
-
-  function render_list(result, concept) {
-    if (!result || result.error || !result.list) {
-      console.log(`error in render_start. Result is wrong: ${JSON.stringify(result)}`);
-      return;
+    async function call_api(api, form) {
+      const result = await (await fetch(`/api/${api}`, {
+        method: 'POST',
+        body: form
+      })).json();
+      return result;
     }
 
-    if (concept) {
-      const h2 = document.createElement('h2');
-      h2.textContent = `Related concepts for ${concept}`;
-      document.body.appendChild(h2);
+    function render_result(result, concept) {
+      document.body.className = 'done';
+
+      if (!result) {
+        render_nothing();
+        return;
+      }
+
+      if (result.error) {
+        render_error(result.error);
+        return;
+      }
+
+      if (result.text) {
+        render_concept(result.text, concept);
+        return;
+      }
+
+      if (result.list) {
+        render_list(result.list, concept);
+        return;
+      }
+
+      render_nothing();
     }
 
-    result.list.forEach((item) => {
-      const li = document.createElement('li');
+    function render_nothing() {
+      // TODO: Rendering something that signifies nothing.
+      render_error('Nothing to render.');
+    }
+
+    function render_error(error) {
+      // TOOD: Rendering the error.
+      throw new Error(error);
+    }
+
+    function render_concept(text, concept) {
+      const div = document.createElement('div');
+      div.className = 'description';
+      div.textContent = text;
+      document.body.appendChild(div);
+
+      const more = document.createElement('div');
+      more.className = 'more';
       const url = new URL(window.location);
-      url.searchParams.set('mode', 'describe');
-      url.searchParams.set('concept', item);
-      li.innerHTML = `<a href="${url}">${item}</a>`;
-      document.body.appendChild(li);
-    });
-  }
+      url.searchParams.set('mode', 'list');
+      url.searchParams.set('concept', concept);
+      more.innerHTML = `<a href="${url}">Related concepts</a>`;
+      document.body.appendChild(more);
+    }
+
+    function render_list(list, concept) {
+      const concept_title = concept
+        ? `Related to ${concept}`
+        : 'Here are some interesting concepts';
+      const h2 = document.createElement('h2');
+      h2.textContent = concept_title;
+      document.body.appendChild(h2);
+
+      const ul = document.createElement('ul');
+
+      list.forEach((item) => {
+        const li = document.createElement('li');
+        const url = new URL(window.location);
+        url.searchParams.set('mode', 'describe');
+        url.searchParams.set('concept', item);
+        li.innerHTML = `<a href="${url}">${item}</a>`;
+        ul.appendChild(li);
+      });
+      document.body.appendChild(ul);
+    }
 
 
-</script>
+  </script>
+</body>

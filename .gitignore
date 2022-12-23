@@ -4,3 +4,4 @@ env/
 .env
 embeddings/
 *.pyc
+__pycache__

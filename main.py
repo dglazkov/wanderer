@@ -1,6 +1,7 @@
 import os
 import re
 import traceback
+import random
 
 
 from ask_embeddings import ask
@@ -11,6 +12,7 @@ from flask import Flask, jsonify, render_template, request
 START_QUERY = "list some interesting key concepts, each on new line"
 LIST_QUERY = "list some interesting key concepts related to {concept}, each on new line"
 DESCRIBE_QUERY = "describe {concept}"
+MAX_ITEMS_PER_LIST = 7
 
 app = Flask(__name__)
 
@@ -21,14 +23,17 @@ def sanitize(line):
     pattern = re.compile(r"^\d+\.")
     return pattern.sub("", line).lstrip("* ").lstrip("- ").strip()
 
+
+def make_list(response):
+    lines = random.sample(response.splitlines(), MAX_ITEMS_PER_LIST)
+    return [sanitize(line) for line in lines]
     
 @app.route("/api/start", methods=["POST"])
 def start():
     try:
         response = ask(START_QUERY, "embeddings/what-dimitri-learned.pkl")
-        lines = [sanitize(line) for line in response.splitlines()]
         return jsonify({
-            "list": lines
+            "list": make_list(response)
         })
 
     except Exception as e:
@@ -77,9 +82,8 @@ def list():
     try:
         response = ask(LIST_QUERY.format(concept=concept),
                        "embeddings/what-dimitri-learned.pkl")
-        lines = [sanitize(line) for line in response.splitlines()]
         return jsonify({
-            "list": lines
+            "list": make_list(response)
         })
 
     except Exception as e:
