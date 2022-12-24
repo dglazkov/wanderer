@@ -33,9 +33,10 @@ def make_list(response):
 @app.route("/api/start", methods=["POST"])
 def start():
     try:
-        response = ask(START_QUERY, "embeddings/what-dimitri-learned.pkl")
+        (response, issues) = ask(START_QUERY, "embeddings/what-dimitri-learned.pkl")
         return jsonify({
-            "list": make_list(response)
+            "list": make_list(response),
+            "issues": issues
         })
 
     except Exception as e:
@@ -57,10 +58,11 @@ def describe():
             "error": "Concept is required"
         })
     try:
-        response = ask(DESCRIBE_QUERY.format(concept=concept),
+        (response, issues) = ask(DESCRIBE_QUERY.format(concept=concept),
                        "embeddings/what-dimitri-learned.pkl")
         return jsonify({
-            "text": response
+            "text": response,
+            "issues": issues
         })
 
     except Exception as e:
@@ -82,10 +84,11 @@ def list():
             "error": "Concept is required"
         })
     try:
-        response = ask(LIST_QUERY.format(concept=concept),
+        (response, issues) = ask(LIST_QUERY.format(concept=concept),
                        "embeddings/what-dimitri-learned.pkl")
         return jsonify({
-            "list": make_list(response)
+            "list": make_list(response),
+            "issues": issues
         })
 
     except Exception as e:

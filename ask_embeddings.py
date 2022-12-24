@@ -23,8 +23,8 @@ def get_embedding(text):
 
 def get_similarities(query_embedding, embeddings):
     return sorted([
-        (vector_similarity(query_embedding, embedding), text, tokens)
-        for text, embedding, tokens
+        (vector_similarity(query_embedding, embedding), text, tokens, issue_id)
+        for text, embedding, tokens, issue_id
         in embeddings], reverse=True)
 
 
@@ -40,14 +40,21 @@ def get_context(similiarities):
     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
     separator_len = len(tokenizer.tokenize(SEPARATOR))
 
-    for _, text, tokens in similiarities:
+    issue_ids = set()
+
+    for id, (_, text, tokens, issue_id) in enumerate(similiarities):
         context_len += tokens + separator_len
         if context_len > MAX_CONTEXT_LEN:
             if len(context) == 0:
                 context.append(text[:(MAX_CONTEXT_LEN - separator_len)])
             break
         context.append(text)
-    return context
+        if id < 4:
+            issue_ids.add(issue_id)
+    return context, issue_ids
+
+def get_issues(issue_ids, issue_info):
+    return [issue_info[issue_id] for issue_id in issue_ids]
 
 def get_completion(prompt):
     response = openai.Completion.create(
@@ -64,10 +71,12 @@ def get_completion(prompt):
 def ask(query, embeddings_file):
     embeddings = load_embeddings(embeddings_file)
     query_embedding = get_embedding(query)
-    similiarities = get_similarities(query_embedding, embeddings)
-    context = get_context(similiarities)
+    similiarities = get_similarities(query_embedding, embeddings["embeddings"])
+    (context, issue_ids) = get_context(similiarities)
+
+    issues = get_issues(issue_ids, embeddings["issue_info"])
 
     # Borrowed from https://github.com/openai/openai-cookbook/blob/838f000935d9df03e75e181cbcea2e306850794b/examples/Question_answering_using_embeddings.ipynb
     prompt = f"Answer the question as truthfully as possible using the provided context, and if the answer is not contained within the text below, say \"I don't know.\"\n\nContext:\n{context} \n\nQuestion:\n{query}\n\nAnswer:"
 
-    return get_completion(prompt)
+    return get_completion(prompt), issues
