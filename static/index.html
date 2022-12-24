@@ -2,6 +2,14 @@
 <title>Wanderer</title>
 
 <head>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1GJ2M90PKD"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-1GJ2M90PKD');
+  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Roboto:wght@300&family=Shadows+Into+Light+Two&display=swap');
 
@@ -91,7 +99,7 @@
       width: 200px;
     }
 
-    ol li>*{
+    ol li>* {
       display: block;
       text-align: center;
     }
@@ -103,7 +111,7 @@
     }
 
     ol li p {
-      font-family: 'Roboto',sans-serif;
+      font-family: 'Roboto', sans-serif;
       color: #455a64;
       padding: 0 10px;
       font-size: 12px;
@@ -216,7 +224,7 @@
         const image = issue[1];
         const title = issue[2];
         const description = issue[3];
-        const li = document.createElement('li'); 
+        const li = document.createElement('li');
         li.innerHTML = `
           <a href="${url}"><img src="${image}"></a>
           <a href="${url}">${title}</a>
