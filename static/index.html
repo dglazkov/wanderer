@@ -194,7 +194,12 @@
       if (concept)
         form.append('concept', concept);
 
-      const result = await call_api(mode, form);
+      let result = null;
+      try {
+        result = await call_api(mode, form);
+      } catch (e) {
+        result = { error: e.message };
+      }
       render_result(result, concept);
     }
 
