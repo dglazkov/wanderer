@@ -128,7 +128,7 @@
     #spinner {
       font-size: 100px;
       text-align: center;
-      animation: rotate 15s linear infinite;
+      animation: rotate 30s linear infinite;
     }
 
     .done #spinner {
@@ -140,11 +140,40 @@
         transform: rotate(360deg);
       }
     }
+
+    text {
+      font-family: 'Shadows Into Light Two', cursive;
+      font-weight: bold;
+      fill: #7c7ce0;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    svg {
+      width: 200px;
+      height: 200px;
+    }
+
+    #icon {
+      font-size: 60px;
+    }
   </style>
 </head>
 
 <body>
-  <div id="spinner">&#x2728;</div>
+  <div id="spinner">
+    <svg viewBox="0 0 110 110">
+      <defs>
+        <path id="text-path" d="m 105 55 a 50 50 0 1 0 0 1" />
+      </defs>
+      <text id="icon" x="29" y="78">&#x2728;</text>
+      <text dx="0" dy="0">
+        <textPath xlink:href="#text-path">
+          Wandering in "What Dimitri Learned" ...
+        </textPath>
+      </text>
+    </svg>
+  </div>
   <script type="module">
 
     const VALID_API_CALLS = ['describe', 'list'];
