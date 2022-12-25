@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <title>Wanderer</title>
+
 <head>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-1GJ2M90PKD"></script>
   <script>
@@ -9,7 +10,8 @@
 
     gtag('config', 'G-1GJ2M90PKD');
   </script>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2299%22>&#x2728;</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2299%22>&#x2728;</text></svg>">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Roboto:wght@300&family=Shadows+Into+Light+Two&display=swap');
 
@@ -39,7 +41,7 @@
       font-size: 30px;
       line-height: 1.7em;
       transform: rotate(-4deg);
-      padding: 0 0 40px 0;
+      padding: 30px 0 40px 0;
     }
 
     ul {
@@ -66,8 +68,17 @@
       text-align: center;
     }
 
+    div.error {
+      text-align: center;
+    }
+
+    div.error a {
+      color: #7c7ce0;
+    }
+
     .more a,
-    h2 {
+    h2,
+    div.error {
       font-family: 'Amatic SC', cursive;
       color: #455a64;
       font-size: 30px;
@@ -244,7 +255,16 @@
 
     function render_error(error) {
       // TOOD: Rendering the error.
-      throw new Error(error);
+      const div = document.createElement('div');
+      div.className = 'error';
+      console.log(`Error encountered: ${error}`);
+      const again = new URL(window.location);
+      const restart = new URL(window.location);
+      restart.searchParams.delete('concept');
+      restart.searchParams.set('mode', 'start');
+      div.innerHTML = `Wandered into an empty place<br>
+        Try <a href="${again}">AGAIN</a> or <a href="${restart}">RESTART</a>?`;
+      document.body.appendChild(div);
     }
 
     function render_sources(issues) {
