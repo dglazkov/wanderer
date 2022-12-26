@@ -84,6 +84,7 @@
       color: #7c7ce0;
     }
 
+    .more,
     .more a,
     h2,
     div.error {
@@ -221,6 +222,13 @@
 
     await main();
 
+    function get_restart_url() {
+      const restart = new URL(window.location);
+      restart.searchParams.delete('concept');
+      restart.searchParams.delete('mode');
+      return restart;
+    }
+
     async function main() {
       const params = new URL(window.location).searchParams;
       let concept = params.get('concept');
@@ -289,11 +297,8 @@
       div.className = 'error';
       console.log(`Error encountered: ${error}`);
       const again = new URL(window.location);
-      const restart = new URL(window.location);
-      restart.searchParams.delete('concept');
-      restart.searchParams.set('mode', 'start');
       div.innerHTML = `Wandered into an empty place<br>
-        Try <a href="${again}">AGAIN</a> or <a href="${restart}">RESTART</a>?`;
+        <a href="${again}">Try again</a> or <a href="${get_restart_url()}">Start anew</a>?`;
       document.body.appendChild(div);
     }
 
@@ -331,7 +336,7 @@
       const url = new URL(window.location);
       url.searchParams.set('mode', 'list');
       url.searchParams.set('concept', concept);
-      more.innerHTML = `<a href="${url}">Wander into related concepts</a>`;
+      more.innerHTML = `<a href="${url}">Wander into related concepts</a> or <a href="${get_restart_url()}">Start anew</a>.`;
       document.body.appendChild(more);
     }
 
