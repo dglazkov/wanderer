@@ -6,6 +6,7 @@ import traceback
 import openai
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
+from google.appengine.api import memcache, wrap_wsgi_app
 
 from ask_embeddings import ask, ask_start
 
@@ -14,11 +15,22 @@ LIST_QUERY = "list some interesting key concepts related to {concept}, each on n
 DESCRIBE_QUERY = "describe {concept}"
 MAX_ITEMS_PER_LIST = 7
 EMBEDDINGS_FILE = "embeddings/what-dimitri-learned.pkl"
+CACHING_DURATION = 60 * 60 * 2  # 2 hours, why not
 
 app = Flask(__name__)
+app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_TOKEN")
+
+
+def get_memcache_entry(prefix, query, factory_function):
+    key = f"{prefix}-{query}"
+    entry = memcache.get(key)
+    if entry is None:
+        entry = factory_function(query)
+        memcache.set(key, entry, CACHING_DURATION)
+    return entry
 
 
 def sanitize(line):
@@ -53,6 +65,14 @@ def start_sample():
     return render_template("start.html")
 
 
+def ask_to_describe(concept):
+    (response, issues) = ask(DESCRIBE_QUERY.format(concept=concept), EMBEDDINGS_FILE)
+    return jsonify({
+        "text": response,
+        "issues": issues
+    })
+
+
 @app.route("/api/describe", methods=["POST"])
 def describe():
     concept = request.form["concept"]
@@ -61,12 +81,7 @@ def describe():
             "error": "Concept is required"
         })
     try:
-        (response, issues) = ask(DESCRIBE_QUERY.format(concept=concept),
-                                 EMBEDDINGS_FILE)
-        return jsonify({
-            "text": response,
-            "issues": issues
-        })
+        return get_memcache_entry("describe", concept, ask_to_describe)
 
     except Exception as e:
         return jsonify({
@@ -79,6 +94,14 @@ def describe_sample():
     return render_template("describe.html")
 
 
+def ask_to_list(concept):
+    (response, issues) = ask(LIST_QUERY.format(concept=concept), EMBEDDINGS_FILE)
+    return jsonify({
+        "list": make_list(response),
+        "issues": issues
+    })
+
+
 @app.route("/api/list", methods=["POST"])
 def list():
     concept = request.form["concept"]
@@ -87,12 +110,7 @@ def list():
             "error": "Concept is required"
         })
     try:
-        (response, issues) = ask(LIST_QUERY.format(concept=concept),
-                                 EMBEDDINGS_FILE)
-        return jsonify({
-            "list": make_list(response),
-            "issues": issues
-        })
+        return get_memcache_entry("list", concept, ask_to_list)
 
     except Exception as e:
         return jsonify({

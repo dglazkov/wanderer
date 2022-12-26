@@ -2,6 +2,9 @@ runtime: python39
 
 instance_class: F4
 
+app_engine_apis: true
+
+
 handlers:
 - url: /
   static_files: static/index.html
