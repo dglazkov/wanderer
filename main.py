@@ -7,7 +7,7 @@ import openai
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 
-from ask_embeddings import ask
+from ask_embeddings import ask, ask_start
 
 START_QUERY = "list some interesting key concepts, each on new line"
 LIST_QUERY = "list some interesting key concepts related to {concept}, each on new line"
@@ -36,7 +36,7 @@ def make_list(response):
 @app.route("/api/start", methods=["POST"])
 def start():
     try:
-        (response, issues) = ask(START_QUERY, EMBEDDINGS_FILE)
+        (response, issues) = ask_start(START_QUERY, EMBEDDINGS_FILE)
         return jsonify({
             "list": make_list(response),
             "issues": issues
