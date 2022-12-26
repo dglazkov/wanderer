@@ -219,6 +219,7 @@
   <script type="module">
 
     const VALID_API_CALLS = ['describe', 'list'];
+    const NULL_IMAGE = 'https://substackcdn.com/image/fetch/w_500,c_fill,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2Fe8ecbd7b-ac86-4690-a594-ccb930ecb059_3000x1996.jpeg'
 
     await main();
 
@@ -274,6 +275,10 @@
       }
 
       if (result.text) {
+        if (result.text.startsWith('I don\'t know')) {
+          render_nothing();
+          return;
+        }
         render_concept(result.text, result.issues, concept);
         return;
       }
@@ -287,12 +292,10 @@
     }
 
     function render_nothing() {
-      // TODO: Rendering something that signifies nothing.
       render_error('Nothing to render.');
     }
 
     function render_error(error) {
-      // TOOD: Rendering the error.
       const div = document.createElement('div');
       div.className = 'error';
       console.log(`Error encountered: ${error}`);
@@ -310,7 +313,7 @@
       const ol = document.createElement('ol');
       issues.forEach(issue => {
         const url = issue[0];
-        const image = issue[1];
+        const image = issue[1] || NULL_IMAGE;
         const title = issue[2];
         const description = issue[3];
         const li = document.createElement('li');
