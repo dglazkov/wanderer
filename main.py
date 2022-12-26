@@ -15,7 +15,8 @@ LIST_QUERY = "list some interesting key concepts related to {concept}, each on n
 DESCRIBE_QUERY = "describe {concept}"
 MAX_ITEMS_PER_LIST = 7
 EMBEDDINGS_FILE = "embeddings/what-dimitri-learned.pkl"
-CACHING_DURATION = 60 * 60 * 2  # 2 hours, why not
+WANDERING_MEMORY = 60 * 60 * 2  # 2 hours, why not
+WANDERING_VARIETY = 5
 
 app = Flask(__name__)
 app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
@@ -25,11 +26,12 @@ openai.api_key = os.getenv("OPENAI_API_TOKEN")
 
 
 def get_memcache_entry(prefix, query, factory_function):
-    key = f"{prefix}-{query}"
+    variety = random.randint(0, WANDERING_VARIETY)
+    key = f"{prefix}-{variety}-{query}"
     entry = memcache.get(key)
     if entry is None:
         entry = factory_function(query)
-        memcache.set(key, entry, CACHING_DURATION)
+        memcache.set(key, entry, WANDERING_MEMORY)
     return entry
 
 
@@ -45,14 +47,18 @@ def make_list(response):
     return [sanitize(line) for line in lines]
 
 
+def ask_to_start(_):
+    (response, issues) = ask_start(START_QUERY, EMBEDDINGS_FILE)
+    return jsonify({
+        "list": make_list(response),
+        "issues": issues
+    })
+
+
 @app.route("/api/start", methods=["POST"])
 def start():
     try:
-        (response, issues) = ask_start(START_QUERY, EMBEDDINGS_FILE)
-        return jsonify({
-            "list": make_list(response),
-            "issues": issues
-        })
+        return get_memcache_entry("start", "", ask_to_start)
 
     except Exception as e:
         return jsonify({
