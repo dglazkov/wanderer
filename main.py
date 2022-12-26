@@ -1,23 +1,25 @@
 import os
+import random
 import re
 import traceback
-import random
 
-
-from ask_embeddings import ask
 import openai
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
+
+from ask_embeddings import ask
 
 START_QUERY = "list some interesting key concepts, each on new line"
 LIST_QUERY = "list some interesting key concepts related to {concept}, each on new line"
 DESCRIBE_QUERY = "describe {concept}"
 MAX_ITEMS_PER_LIST = 7
+EMBEDDINGS_FILE = "embeddings/what-dimitri-learned.pkl"
 
 app = Flask(__name__)
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_TOKEN")
+
 
 def sanitize(line):
     pattern = re.compile(r"^\d+\.")
@@ -29,11 +31,12 @@ def make_list(response):
     if len(lines) > MAX_ITEMS_PER_LIST:
         lines = random.sample(lines, MAX_ITEMS_PER_LIST)
     return [sanitize(line) for line in lines]
-    
+
+
 @app.route("/api/start", methods=["POST"])
 def start():
     try:
-        (response, issues) = ask(START_QUERY, "embeddings/what-dimitri-learned.pkl")
+        (response, issues) = ask(START_QUERY, EMBEDDINGS_FILE)
         return jsonify({
             "list": make_list(response),
             "issues": issues
@@ -59,7 +62,7 @@ def describe():
         })
     try:
         (response, issues) = ask(DESCRIBE_QUERY.format(concept=concept),
-                       "embeddings/what-dimitri-learned.pkl")
+                                 EMBEDDINGS_FILE)
         return jsonify({
             "text": response,
             "issues": issues
@@ -85,7 +88,7 @@ def list():
         })
     try:
         (response, issues) = ask(LIST_QUERY.format(concept=concept),
-                       "embeddings/what-dimitri-learned.pkl")
+                                 EMBEDDINGS_FILE)
         return jsonify({
             "list": make_list(response),
             "issues": issues

@@ -1,13 +1,15 @@
-import openai
-import numpy as np
-from transformers import GPT2TokenizerFast
 import pickle
+
+import numpy as np
+import openai
+from transformers import GPT2TokenizerFast
 
 EMBEDDINGS_MODEL_NAME = "text-embedding-ada-002"
 COMPLETION_MODEL_NAME = "text-davinci-003"
 
 SEPARATOR = "\n"
 MAX_CONTEXT_LEN = 2048
+
 
 def vector_similarity(x, y):
     return np.dot(np.array(x), np.array(y))
@@ -53,8 +55,10 @@ def get_context(similiarities):
             issue_ids.add(issue_id)
     return context, issue_ids
 
+
 def get_issues(issue_ids, issue_info):
     return [issue_info[issue_id] for issue_id in issue_ids]
+
 
 def get_completion(prompt):
     response = openai.Completion.create(
@@ -67,6 +71,7 @@ def get_completion(prompt):
         presence_penalty=0
     )
     return response.choices[0].text.strip()
+
 
 def ask(query, embeddings_file):
     embeddings = load_embeddings(embeddings_file)
