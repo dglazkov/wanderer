@@ -34,6 +34,41 @@
       justify-content: center;
       flex-direction: column;
       align-items: center;
+      animation: fadein 2s ease-in;
+    }
+
+    body.ready {
+      animation: fadeout 500ms;
+    }
+
+    body.done {
+      animation: fadein 500ms;
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeout {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0;
+      }
+    }
+
+    @keyframes rotate {
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .description {
@@ -177,12 +212,6 @@
       display: none;
     }
 
-    @keyframes rotate {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
     text {
       font-family: 'Shadows Into Light Two', cursive;
       font-weight: bold;
@@ -245,11 +274,17 @@
         form.append('concept', concept);
 
       let result = null;
+      const before = performance.now();
       try {
         result = await call_api(mode, form);
       } catch (e) {
         result = { error: e.message };
       }
+      if (performance.now() - before > 1000) {
+        document.body.className = 'ready';
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      document.body.className = 'done';
       render_result(result, concept);
     }
 
@@ -262,8 +297,6 @@
     }
 
     function render_result(result, concept) {
-      document.body.className = 'done';
-
       if (!result) {
         render_nothing();
         return;
