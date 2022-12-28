@@ -36,7 +36,7 @@ def load_embeddings(embeddings_file):
         return pickle.load(f)
 
 
-def get_context(similiarities):
+def get_context(similiarities, token_count):
     context = []
     context_len = 0
 
@@ -47,9 +47,9 @@ def get_context(similiarities):
 
     for id, (_, text, tokens, issue_id) in enumerate(similiarities):
         context_len += tokens + separator_len
-        if context_len > MAX_CONTEXT_LEN:
+        if context_len > token_count:
             if len(context) == 0:
-                context.append(text[:(MAX_CONTEXT_LEN - separator_len)])
+                context.append(text[:(token_count - separator_len)])
             break
         context.append(text)
         if id < 4:
@@ -78,7 +78,7 @@ def ask(query, embeddings_file):
     embeddings = load_embeddings(embeddings_file)
     query_embedding = get_embedding(query)
     similiarities = get_similarities(query_embedding, embeddings["embeddings"])
-    (context, issue_ids) = get_context(similiarities)
+    (context, issue_ids) = get_context(similiarities, MAX_CONTEXT_LEN)
 
     issues = get_issues(issue_ids, embeddings["issue_info"])
 
@@ -94,7 +94,7 @@ def ask_start(query, embeddings_file):
                        for text, _, tokens, issue_id
                        in embeddings["embeddings"]]
     shuffle(randomized_list)
-    (context, issue_ids) = get_context(randomized_list)
+    (context, issue_ids) = get_context(randomized_list, MAX_CONTEXT_LEN)
 
     issues = get_issues(issue_ids, embeddings["issue_info"])
 
@@ -102,3 +102,12 @@ def ask_start(query, embeddings_file):
     prompt = f"Answer the question as truthfully as possible using the provided context, and if the answer is not contained within the text below, say \"I don't know.\"\n\nContext:\n{context} \n\nQuestion:\n{query}\n\nAnswer:"
 
     return get_completion(prompt), issues
+
+def ask_polymath(query, token_count, embeddings_file):
+    embeddings = load_embeddings(embeddings_file)
+    query_embedding = get_embedding(query)
+    similiarities = get_similarities(
+        query_embedding, embeddings["embeddings"])
+    (context, issue_ids) = get_context(similiarities, token_count)
+    issues = get_issues(issue_ids, embeddings["issue_info"])
+    return context, issues
