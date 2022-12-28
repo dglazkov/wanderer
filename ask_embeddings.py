@@ -1,3 +1,4 @@
+import base64
 import pickle
 from random import shuffle
 
@@ -10,6 +11,28 @@ COMPLETION_MODEL_NAME = "text-davinci-003"
 
 SEPARATOR = "\n"
 MAX_CONTEXT_LEN = 2048
+
+
+# In JS, the argument can be produced with with:
+# ```
+# btoa(String.fromCharCode(...(new Uint8Array(new Float32Array(data).buffer))));
+# ```
+# where `data` is an array of floats
+
+
+def vector_from_base64(str):
+    return np.frombuffer(base64.b64decode(str), dtype=np.float32)
+
+# In JS, the argument can be produced with with:
+# ```
+# new Float32Array(new Uint8Array([...atob(encoded_data)].map(c => c.charCodeAt(0))).buffer);
+# ```
+# where `encoded_data` is a base64 string
+
+
+def base64_from_vector(vector):
+    data = np.array(vector, dtype=np.float32)
+    return base64.b64encode(data)
 
 
 def vector_similarity(x, y):
@@ -103,9 +126,10 @@ def ask_start(query, embeddings_file):
 
     return get_completion(prompt), issues
 
+
 def ask_polymath(query, token_count, embeddings_file):
     embeddings = load_embeddings(embeddings_file)
-    query_embedding = get_embedding(query)
+    query_embedding = vector_from_base64(query)
     similiarities = get_similarities(
         query_embedding, embeddings["embeddings"])
     (context, issue_ids) = get_context(similiarities, token_count)
