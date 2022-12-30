@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from google.appengine.api import memcache, wrap_wsgi_app
 
-from ask_embeddings import ask, ask_start, ask_polymath
+from ask_embeddings import ask, ask_start
 
 START_QUERY = "list some interesting key concepts, each on new line"
 LIST_QUERY = "list some interesting key concepts related to {concept}, each on new line"
@@ -127,37 +127,6 @@ def list():
 @app.route("/api/list", methods=["GET"])
 def list_sample():
     return render_template("list.html")
-
-
-# Support for https://github.com/dglazkov/polymath server
-DEFAULT_TOKEN_COUNT = 1000
-
-
-@app.route("/api/query", methods=["POST"])
-def query():
-    try:
-        query = request.form["query"]
-        token_count = request.form.get(
-            "token_count", DEFAULT_TOKEN_COUNT, type=int)
-        if not query:
-            return jsonify({
-                "error": "Query is required"
-            })
-        (context, issues) = ask_polymath(query, token_count, EMBEDDINGS_FILE)
-        return jsonify({
-            "context": context,
-            "issues": issues
-        })
-
-    except Exception as e:
-        return jsonify({
-            "error": f"{e}\n{traceback.print_exc()}"
-        })
-
-
-@app.route("/api/query", methods=["GET"])
-def query_sample():
-    return render_template("query.html")
 
 
 if __name__ == "__main__":

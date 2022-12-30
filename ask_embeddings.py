@@ -125,13 +125,3 @@ def ask_start(query, embeddings_file):
     prompt = f"Answer the question as truthfully as possible using the provided context, and if the answer is not contained within the text below, say \"I don't know.\"\n\nContext:\n{context} \n\nQuestion:\n{query}\n\nAnswer:"
 
     return get_completion(prompt), issues
-
-
-def ask_polymath(query, token_count, embeddings_file):
-    embeddings = load_embeddings(embeddings_file)
-    query_embedding = vector_from_base64(query)
-    similiarities = get_similarities(
-        query_embedding, embeddings["embeddings"])
-    (context, issue_ids) = get_context(similiarities, token_count)
-    issues = get_issues(issue_ids, embeddings["issue_info"])
-    return context, issues
