@@ -1,16 +1,19 @@
 import base64
+import json
 import pickle
 from random import shuffle
 
 import numpy as np
 import openai
+import urllib3
 from transformers import GPT2TokenizerFast
 
 EMBEDDINGS_MODEL_NAME = "text-embedding-ada-002"
 COMPLETION_MODEL_NAME = "text-davinci-003"
+POLYMATH_SERVER = "https://polymath.glazkov.com"
 
 SEPARATOR = "\n"
-MAX_CONTEXT_LEN = 2048
+MAX_CONTEXT_LEN = 2000
 
 
 # In JS, the argument can be produced with with:
@@ -97,9 +100,19 @@ def get_completion(prompt):
     return response.choices[0].text.strip()
 
 
+def query_polymath_server(query, server):
+    query_vector = base64_from_vector(get_embedding(query))
+    http = urllib3.PoolManager()
+    response = http.request(
+        'POST', POLYMATH_SERVER, fields={
+            "query": query_vector,
+            "token_count": MAX_CONTEXT_LEN}).data
+    return json.loads(response)
+
+
 def ask(query, embeddings_file):
-    embeddings = load_embeddings(embeddings_file)
     query_embedding = get_embedding(query)
+    embeddings = load_embeddings(embeddings_file)
     similiarities = get_similarities(query_embedding, embeddings["embeddings"])
     (context, issue_ids) = get_context(similiarities, MAX_CONTEXT_LEN)
 

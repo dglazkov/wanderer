@@ -2,4 +2,5 @@ flask
 python-dotenv
 openai
 transformers
+urllib3
 appengine-python-standard>=1.0.0
