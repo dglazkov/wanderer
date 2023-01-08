@@ -349,15 +349,11 @@
 
       const ol = document.createElement('ol');
       issues.forEach(issue => {
-        const url = issue[0];
-        const image = issue[1] || NULL_IMAGE;
-        const title = issue[2];
-        const description = issue[3];
         const li = document.createElement('li');
         li.innerHTML = `
-          <a href="${url}"><img src="${image}"></a>
-          <a href="${url}">${title}</a>
-          <p>${description}</p>`;
+          <a href="${issue.url}"><img src="${issue.image_url || NULL_IMAGE}"></a>
+          <a href="${issue.url}">${issue.title}</a>
+          <p>${issue.description}</p>`;
         ol.appendChild(li);
       });
       document.body.appendChild(ol);
