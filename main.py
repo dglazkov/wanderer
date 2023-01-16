@@ -54,7 +54,6 @@ def query_polymath_server(query_embedding, random, server):
     http = urllib3.PoolManager()
     fields = {
         "version": polymath.CURRENT_VERSION,
-        "access_token": server,
         "query_embedding_model": polymath.EMBEDDINGS_MODEL_ID,
         "count": CONTEXT_TOKEN_COUNT
     }
