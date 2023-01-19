@@ -9,8 +9,9 @@ import urllib3
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from google.appengine.api import memcache, wrap_wsgi_app
-
-import polymath
+from polymath import (CURRENT_VERSION, EMBEDDINGS_MODEL_ID, Library,
+                      get_chunk_infos_for_library, get_completion_with_context,
+                      get_context_for_library, get_embedding)
 
 START_QUERY = "list some interesting key concepts, each on new line"
 LIST_QUERY = "list some interesting key concepts related to {concept}, each on new line"
@@ -53,12 +54,13 @@ def make_list(response):
 def query_polymath_server(query_embedding, random, server):
     http = urllib3.PoolManager()
     fields = {
-        "version": polymath.CURRENT_VERSION,
-        "query_embedding_model": polymath.EMBEDDINGS_MODEL_ID,
+        "version": CURRENT_VERSION,
+        "query_embedding_model": EMBEDDINGS_MODEL_ID,
         "count": CONTEXT_TOKEN_COUNT
     }
     if random:
         fields["sort"] = "random"
+        fields["omit"] = "similarity,embedding"
     else:
         fields["query_embedding"] = query_embedding
     response = http.request(
@@ -67,17 +69,17 @@ def query_polymath_server(query_embedding, random, server):
     if 'error' in obj:
         error = obj['error']
         raise Exception(f"Server returned an error: {error}")
-    return polymath.Library(data=obj)
+    return Library(data=obj)
 
 
 def ask(query, random=False):
-    query_vector = None if random else polymath.base64_from_vector(
-        polymath.get_embedding(query))
+    query_vector = None if random else Library.base64_from_vector(
+        get_embedding(query))
 
     library = query_polymath_server(query_vector, random, POLYMATH_SERVER)
-    context = polymath.get_context_for_library(library)
-    sources = polymath.get_chunk_infos_for_library(library)
-    completion = polymath.get_completion_with_context(query, context)
+    context = get_context_for_library(library)
+    sources = get_chunk_infos_for_library(library)
+    completion = get_completion_with_context(query, context)
 
     return (completion, sources[:3])
 
