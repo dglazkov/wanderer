@@ -10,8 +10,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from google.appengine.api import memcache, wrap_wsgi_app
 from polymath import (CURRENT_VERSION, EMBEDDINGS_MODEL_ID, Library,
-                      get_chunk_infos_for_library, get_completion_with_context,
-                      get_context_for_library, get_embedding)
+                      get_completion_with_context, get_embedding)
 
 START_QUERY = "list some interesting key concepts, each on new line"
 LIST_QUERY = "list some interesting key concepts related to {concept}, each on new line"
@@ -20,7 +19,7 @@ MAX_ITEMS_PER_LIST = 7
 POLYMATH_SERVER = "polymath.glazkov.com"
 WANDERING_MEMORY = 60 * 60 * 2  # 2 hours, why not
 WANDERING_VARIETY = 5
-CONTEXT_TOKEN_COUNT = 1500
+CONTEXT_TOKEN_COUNT = 1000
 
 app = Flask(__name__)
 app.wsgi_app = wrap_wsgi_app(app.wsgi_app)
@@ -77,18 +76,21 @@ def ask(query, random=False):
         get_embedding(query))
 
     library = query_polymath_server(query_vector, random, POLYMATH_SERVER)
-    context = get_context_for_library(library)
-    sources = get_chunk_infos_for_library(library)
+    context = "\n".join(library.text)
+    sources = library.unique_infos
     completion = get_completion_with_context(query, context)
 
     return (completion, sources[:3])
 
 
+def jsonify_issues(issues):
+    return [ issue.toJSON() for issue in issues ]
+
 def ask_to_start(_):
     (response, issues) = ask(START_QUERY, True)
     return jsonify({
         "list": make_list(response),
-        "issues": issues
+        "issues": jsonify_issues(issues)
     })
 
 
@@ -112,7 +114,7 @@ def ask_to_describe(concept):
     (response, issues) = ask(DESCRIBE_QUERY.format(concept=concept))
     return jsonify({
         "text": response,
-        "issues": issues
+        "issues": jsonify_issues(issues)
     })
 
 
@@ -141,7 +143,7 @@ def ask_to_list(concept):
     (response, issues) = ask(LIST_QUERY.format(concept=concept))
     return jsonify({
         "list": make_list(response),
-        "issues": issues
+        "issues": jsonify_issues(issues)
     })
 
 
