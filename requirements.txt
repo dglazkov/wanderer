@@ -4,4 +4,4 @@ openai
 transformers
 urllib3
 appengine-python-standard>=1.0.0
-git+https://github.com/dglazkov/polymath.git
+git+https://github.com/dglazkov/polymath.git@b68012a41c3050d8cca2ebd2b0904f25bdb80166

@@ -57,10 +57,7 @@ def query_polymath_server(query_embedding, random, server):
         "query_embedding_model": EMBEDDINGS_MODEL_ID,
         "count": CONTEXT_TOKEN_COUNT
     }
-    if random:
-        fields["sort"] = "random"
-        fields["omit"] = "similarity,embedding"
-    else:
+    if not random:
         fields["query_embedding"] = query_embedding
     response = http.request(
         'POST', server, fields=fields).data
@@ -84,7 +81,8 @@ def ask(query, random=False):
 
 
 def jsonify_issues(issues):
-    return [ issue.toJSON() for issue in issues ]
+    return [issue.toJSON() for issue in issues]
+
 
 def ask_to_start(_):
     (response, issues) = ask(START_QUERY, True)
