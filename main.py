@@ -166,5 +166,10 @@ def list_sample():
     return render_template("list.html")
 
 
+@app.route('/_ah/warmup')
+def warmup():
+    return ('', 204)
+
+
 if __name__ == "__main__":
     app.run(host='127.0.0.1', port=8080, debug=True)
